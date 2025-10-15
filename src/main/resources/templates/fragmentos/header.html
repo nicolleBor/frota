@@ -1,50 +1,121 @@
 <!-- templates/fragmentos/header.html -->
 <header th:fragment="header(activePage)">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm mb-3">
         <div class="container-fluid">
-			<a class="navbar-brand" href="#"> <i class="fas fa-truck me-2"></i>FrotaLux </a>
+            <!-- LOGO -->
+            <a class="navbar-brand fw-bold" th:href="@{/home/dashboard}">
+                <i class="fas fa-truck me-2"></i>FrotaLux
+            </a>
 
-
-			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <!-- Botão de menu responsivo -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            
+
+            <!-- Menu principal -->
             <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
 
-				<ul class="navbar-nav me-auto">
-					<!-- Item normal -->
-					<li class="nav-item"><a class="nav-link"
-						th:classappend="${activePage == 'dashboard'} ? 'active' : ''"
-						th:href="@{/home/dashboard}"> <i class="fas fa-home me-1"></i>
-							Início
-					</a></li>
+                    <!-- Início -->
+                    <li class="nav-item">
+                        <a class="nav-link"
+                           th:classappend="${activePage ?: ''} == 'dashboard' ? 'active' : ''"
+                           th:href="@{/home/dashboard}">
+                            <i class="fas fa-home me-1"></i> Início
+                        </a>
+                    </li>
 
-					<!-- Dropdown de Marcas -->
-					<li class="nav-item dropdown">
-						<a class="nav-link dropdown-toggle" id="filmesDropdown"
-						role="button" data-bs-toggle="dropdown" aria-expanded="false"
-						th:classappend="${activePage == '' || activePage == 'caminhao'} ? 'active' : ''"
-						style="cursor: pointer;"> <i class="fas fa-film me-1"></i>
-							caminhao
-						</a>
-						<ul class="dropdown-menu" aria-labelledby="filmesDropdown">
-							<li><a class="dropdown-item"
-								th:classappend="${activePage == 'caminhao'} ? 'active' : ''"
-								th:href="@{/caminhao}"> <i class="fas fa-list me-1"></i> Listagem Caminhao</a>
-							</li>
-							<li><a class="dropdown-item"
-								th:classappend="${activePage == 'caminhao'} ? 'active' : ''"
-								th:href="@{/caminhao/formulario}"> <i class="fas fa-star me-1"></i> Cadastrar Caminhao
-							</a></li>
-						</ul>
-					</li>
-				</ul>
+                    <!-- Caminhão -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle"
+                           id="caminhaoDropdown"
+                           role="button"
+                           data-bs-toggle="dropdown"
+                           aria-expanded="false"
+                           th:classappend="${activePage ?: ''} == 'caminhao' ? 'active' : ''"
+                           style="cursor: pointer;">
+                            <i class="fas fa-truck me-1"></i> Caminhão
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="caminhaoDropdown">
+                            <li><a class="dropdown-item" th:href="@{/caminhao}">
+                                <i class="fas fa-list me-1"></i> Listagem de Caminhões
+                            </a></li>
+                            <li><a class="dropdown-item" th:href="@{/caminhao/formulario}">
+                                <i class="fas fa-plus me-1"></i> Cadastrar Caminhão
+                            </a></li>
+                        </ul>
+                    </li>
 
-				<div class="d-flex align-items-center">
-                   <!--  <div class="dropdown">
-                        <a href="#" class="d-block link-light text-decoration-none dropdown-toggle" 
+                    <!-- Caixa -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle"
+                           id="caixaDropdown"
+                           data-bs-toggle="dropdown"
+                           aria-expanded="false"
+                           style="cursor:pointer;"
+                           th:classappend="${activePage ?: ''} == 'caixa' ? 'active' : ''">
+                            <i class="fas fa-box me-1"></i> Caixa
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="caixaDropdown">
+                            <li><a class="dropdown-item" th:href="@{/caixa}">
+                                <i class="fas fa-list me-1"></i> Listagem de Caixas
+                            </a></li>
+                            <li><a class="dropdown-item" th:href="@{/caixa/formulario}">
+                                <i class="fas fa-plus me-1"></i> Cadastrar Caixa
+                            </a></li>
+                        </ul>
+                    </li>
+
+                    <!-- Produto -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle"
+                           id="produtoDropdown"
+                           data-bs-toggle="dropdown"
+                           aria-expanded="false"
+                           style="cursor:pointer;"
+                           th:classappend="${activePage ?: ''} == 'produto' ? 'active' : ''">
+                            <i class="fas fa-cube me-1"></i> Produto
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="produtoDropdown">
+                            <li><a class="dropdown-item" th:href="@{/produto}">
+                                <i class="fas fa-list me-1"></i> Listagem de Produtos
+                            </a></li>
+                            <li><a class="dropdown-item" th:href="@{/produto/formulario}">
+                                <i class="fas fa-plus me-1"></i> Cadastrar Produto
+                            </a></li>
+                        </ul>
+                    </li>
+
+                    <!-- Solicitação de Transporte -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle"
+                           id="solicitacaoDropdown"
+                           data-bs-toggle="dropdown"
+                           aria-expanded="false"
+                           style="cursor:pointer;"
+                           th:classappend="${activePage ?: ''} == 'solicitacao' ? 'active' : ''">
+                            <i class="fas fa-clipboard-list me-1"></i> Solicitação
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="solicitacaoDropdown">
+                            <li><a class="dropdown-item" th:href="@{/solicitacao}">
+                                <i class="fas fa-list me-1"></i> Listagem de Solicitações
+                            </a></li>
+                            <li><a class="dropdown-item" th:href="@{/solicitacao/formulario}">
+                                <i class="fas fa-plus me-1"></i> Nova Solicitação
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <!-- Área do usuário (opcional, futura integração com login) -->
+                <!--
+                <div class="d-flex align-items-center">
+                    <div class="dropdown">
+                        <a href="#" class="d-block link-light text-decoration-none dropdown-toggle"
                            id="dropdownUser" data-bs-toggle="dropdown">
-                            <span th:if="${session.usuarioLogado != null}" th:text="${session.usuarioLogado.user}" class="me-2 user-greeting"></span>
+                            <span th:if="${session.usuarioLogado != null}"
+                                  th:text="${session.usuarioLogado.user}"
+                                  class="me-2 user-greeting"></span>
                             <img th:src="@{/img/user-avatar.png}" alt="Perfil" width="32" height="32" class="rounded-circle">
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
@@ -57,8 +128,9 @@
                                 </a>
                             </li>
                         </ul>
-                    </div> -->
+                    </div>
                 </div>
+                -->
             </div>
         </div>
     </nav>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="fragmentos/head :: head('Listagem de Produtos')"></head>
+<body>
+<div th:replace="fragmentos/header :: header"></div>
+
+<div class="container mt-4">
+    <h2>Listagem de Produtos</h2>
+    <a class="btn btn-primary mb-3" th:href="@{/produto/formulario}">Novo Produto</a>
+
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nome</th>
+            <th>Peso</th>
+            <th>Volume</th>
+            <th>Ações</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="produto : ${listaProdutos}">
+            <td th:text="${produto.id}"></td>
+            <td th:text="${produto.nome}"></td>
+            <td th:text="${produto.peso}"></td>
+            <td th:text="${produto.volume}"></td>
+            <td>
+                <a class="btn btn-warning btn-sm" th:href="@{'/produto/formulario?id=' + ${produto.id}}">Editar</a>
+                <a class="btn btn-danger btn-sm" th:href="@{'/produto/delete/' + ${produto.id}}">Excluir</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div th:replace="fragmentos/footer :: footer"></div>
+</body>
+</html>

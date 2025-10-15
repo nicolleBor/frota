@@ -3,6 +3,7 @@ package com.example.frota.caminhao;
 import java.util.List;
 import java.util.Optional;
 
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -22,7 +23,8 @@ public class CaminhaoService {
 	
 	@Autowired
 	private CaminhaoMapper caminhaoMapper;
-	
+
+    @Transactional
 	public Caminhao salvarOuAtualizar(AtualizacaoCaminhao dto) {
         // Valida se a marca existe
         Marca marca = marcaService.procurarPorId(dto.marcaId())
@@ -46,7 +48,9 @@ public class CaminhaoService {
 	public List<Caminhao> procurarTodos(){
 		return caminhaoRepository.findAll(Sort.by("modelo").ascending());
 	}
-	public void apagarPorId (Long id) {
+
+	@Transactional
+    public void apagarPorId (Long id) {
 		caminhaoRepository.deleteById(id);
 	}
 	

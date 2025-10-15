@@ -48,7 +48,7 @@ public class CaminhaoController {
             dto = caminhaoMapper.toAtualizacaoDto(caminhao);
         } else {
             // criação: DTO vazio
-            dto = new AtualizacaoCaminhao(null, "", "", null, null, null);
+            dto = new AtualizacaoCaminhao(null, "", "", null, null, null, null,null,null);
         }
         model.addAttribute("caminhao", dto);
         model.addAttribute("marcas", marcaService.procurarTodos());

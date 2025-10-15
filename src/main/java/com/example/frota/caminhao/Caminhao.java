@@ -2,15 +2,8 @@ package com.example.frota.caminhao;
 
 import com.example.frota.marca.Marca;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import jdk.jfr.TransitionFrom;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -37,6 +30,15 @@ public class Caminhao {
 	private String placa;
 	private double cargaMaxima;
 	private int ano;
+    private double comprimento;
+    private double largura;
+    private double altura;
+    private final double fatorCubagem = 300.0;
+    @Transient
+    public double getMetragemCubica(){
+        return comprimento * largura * altura;
+    }
+
 
 	public Caminhao(CadastroCaminhao dados, Marca marca) {
 		this.modelo = dados.modelo();
@@ -44,6 +46,9 @@ public class Caminhao {
 		this.cargaMaxima = dados.cargaMaxima();
 		this.marca = marca;
 		this.ano= dados.ano();
+        this.comprimento = dados.comprimento();
+        this.largura = dados.largura();
+        this.altura = dados.altura();
 	}
 	public Caminhao(AtualizacaoCaminhao dados, Marca marca) {
 		this.modelo = dados.modelo();
@@ -51,6 +56,9 @@ public class Caminhao {
 		this.cargaMaxima = dados.cargaMaxima();
 		this.marca = marca;
 		this.ano= dados.ano();
+        this.comprimento = dados.comprimento();
+        this.largura = dados.largura();
+        this.altura = dados.altura();
 	}
 	
 	public void atualizarInformacoes(AtualizacaoCaminhao dados, Marca marca) {
@@ -64,6 +72,12 @@ public class Caminhao {
 			this.marca = marca;
 		if (dados.ano() != 0)
 			this.ano = dados.ano();
+        if (dados.comprimento() != 0)
+            this.comprimento = dados.comprimento();
+        if (dados.largura() != 0)
+            this.largura = dados.largura();
+        if (dados.altura() != 0)
+            this.altura = dados.altura();
 	}
 	
 }

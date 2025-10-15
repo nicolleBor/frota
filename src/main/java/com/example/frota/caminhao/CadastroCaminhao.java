@@ -10,7 +10,10 @@ public record CadastroCaminhao(
 		String placa,
 		Marca marca,
 		double cargaMaxima,
-		int ano) {
+		int ano,
+        double comprimento,
+        double largura,
+        double altura) {
 
 }
 

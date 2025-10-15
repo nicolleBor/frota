@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="fragmentos/head :: head('Solicitação de Transporte')"></head>
+<body>
+<div th:replace="fragmentos/header :: header"></div>
+
+<div class="container mt-4">
+    <h2 th:text="${solicitacao.id != null} ? 'Editar Solicitação' : 'Nova Solicitação'"></h2>
+
+    <form th:action="@{/solicitacao/salvar}" th:object="${solicitacao}" method="post">
+        <input type="hidden" th:field="*{id}"/>
+
+        <div class="mb-3">
+            <label class="form-label">Produto</label>
+            <select class="form-select" th:field="*{produtoId}">
+                <option th:each="p : ${produtos}" th:value="${p.id}" th:text="${p.nome}"></option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Caixa</label>
+            <select class="form-select" th:field="*{caixaId}">
+                <option th:each="c : ${caixas}" th:value="${c.id}" th:text="${c.nome}"></option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Quantidade</label>
+            <input type="number" class="form-control" th:field="*{quantidade}" required>
+        </div>
+
+        <button type="submit" class="btn btn-success">Salvar</button>
+        <a class="btn btn-secondary" th:href="@{/solicitacao}">Cancelar</a>
+    </form>
+</div>
+
+<div th:replace="fragmentos/footer :: footer"></div>
+</body>
+</html>

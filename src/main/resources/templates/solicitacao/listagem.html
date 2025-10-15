@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="fragmentos/head :: head('Listagem de Solicitações')"></head>
+<body>
+<div th:replace="fragmentos/header :: header"></div>
+
+<div class="container mt-4">
+    <h2>Listagem de Solicitações</h2>
+    <a class="btn btn-primary mb-3" th:href="@{/solicitacao/formulario}">Nova Solicitação</a>
+
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Produto</th>
+            <th>Caixa</th>
+            <th>Quantidade</th>
+            <th>Status</th>
+            <th>Ações</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="s : ${listaSolicitacoes}">
+            <td th:text="${s.id}"></td>
+            <td th:text="${s.produto.nome}"></td>
+            <td th:text="${s.caixa.nome}"></td>
+            <td th:text="${s.quantidade}"></td>
+            <td th:text="${s.status}"></td>
+            <td>
+                <a class="btn btn-warning btn-sm" th:href="@{'/solicitacao/formulario?id=' + ${s.id}}">Editar</a>
+                <a class="btn btn-danger btn-sm" th:href="@{'/solicitacao/delete/' + ${s.id}}">Excluir</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div th:replace="fragmentos/footer :: footer"></div>
+</body>
+</html>
