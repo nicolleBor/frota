@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragmentos/head :: head('Listagem Caminhão')}"></head>
+<body>
+<header th:replace="~{fragmentos/header :: header(activePage='Caminhao')}"></header>
+	<div class="container-fluid" style="max-width: 900px; margin: 0 auto;">
+		<h2 class="text-center"
+			th:text="${caminhao!= null} ? 'Editar Caminhão' : 'Lista Caminhão'"></h2>
+		<div th:if="${message != null}"
+			class="alert alert-success alert-dismissible fade show text-center"
+			role="alert">
+			[[${message}]]
+			<button type="button" class="close btn-sm" data-dismiss="alert"
+				aria-label="Close">
+				<span aria-hidden="true">&times;</span>
+			</button>
+		</div>
+    <a href="/caminhao/formulario">Novo</a>
+    <div th:if="${listaVeiculos.size() > 0}">
+	    <table class="table table-hover table-responsive-xl">
+	        <thead class="thead-light">
+	            <tr>
+	                <th scope="col">Modelo</th>
+	                <th scope="col">Placa</th>
+	                <th scope="col">Ano</th>
+	                <th scope="col">CargMax</th>
+	                <th scope="col">Marca</th>
+	                <th scope="col">Ações</th>
+	            </tr>
+	        </thead>
+	        <tbody>
+	            <tr th:each="caminhao : ${listaVeiculos}">
+	                <td th:text="${caminhao.modelo}"></td>
+	                <td th:text="${caminhao.placa}"></td>
+	                <td th:text="${caminhao.ano}"></td>
+	                <td th:text="${caminhao.cargaMaxima}"></td>
+	                <td th:text="${caminhao.marca.nome}"></td>
+	               
+						<!-- <a th:href="@{/caminhao/formulario?id={id}(id=${caminhao.id})}"><button>Editar</button></a> 
+						<form action="/caminhao" method="post">
+							<input type="hidden" name="_method" value="delete">
+							<input type="hidden" name="id" th:value="${caminhao.id}">
+							<input type="submit" value="Excluir">
+						</form> -->
+						
+						
+					<td><a th:href="@{'/caminhao/formulario/' + ${caminhao.id}}"
+							title="Editar o Caminhao"
+							class="fa-regular fa-pen-to-square icon-dark"></a> &nbsp; <a
+							th:href="@{'/caminhao/delete/' + ${caminhao.id}}"
+							th:caminhaoTitle="${caminhao.placa}" id="btnDelete"
+							title="Apague este caminhao"
+							class="fa-regular fa-trash-can icon-dark btn-delete"></a>
+					</td>
+	            </tr>
+	        </tbody>
+	    </table>
+	  </div>
+    </div>
+	<div th:replace="fragmentos/footer :: footer"></div>
+</body>
+</html>

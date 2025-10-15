@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragmentos/head :: head('Manter Caminhão')}"></head>
+<body>
+	<header
+		th:replace="~{fragmentos/header :: header(activePage='Caminhao')}"></header>
+	<div class="container-fluid" style="max-width: 900px; margin: 0 auto;">
+		<h2 class="text-center"
+			th:text="(${caminhao != null} ? 'Editar Caminhão' : 'Novo Caminhão')"></h2>
+		<div th:if="${message != null}"
+			class="alert alert-success alert-dismissible fade show text-center"
+			role="alert">
+			[[${message}]]
+			<button type="button" class="close btn-sm" data-dismiss="alert"
+				aria-label="Close">
+				<span aria-hidden="true">&times;</span>
+			</button>
+		</div>
+
+		<form th:action="@{/caminhao/salvar}" th:object="${caminhao}"
+			method="post" >
+			<input type="hidden" th:field="*{id}" />
+
+			<!-- method="post" action="/caminhao">
+				<input type="hidden" name="_method" value="put"
+					th:if="${caminhao!= null}"> <input type="hidden" name="id"
+					th:value="${caminhao?.id}"> -->
+
+			<!-- <div class="form-group" style="margin-top: 20px;">
+					<label for="marcaSelect">Escolha uma Marca:</label> 
+					<select class="form-control" id="marcaId" name="marca.id">
+						<option>-Selecione-</option>
+						<option th:each="marcaItem : ${marcas}"
+							th:selected="${caminhao?.marca?.id == marcaItem.id}"
+							th:value="${marcaItem.id}" 
+							th:text="${marcaItem.nome}">
+						</option>
+					</select>
+				</div> -->
+
+			<div class="form-group" style="margin-top: 20px;">
+				<label>Escolha uma Marca:</label> 
+				<select th:field="*{marcaId}" 
+					class="form-control"
+					th:classappend="${#fields.hasErrors('marcaId')} ? 'is-invalid'">	
+					<option value="">-Selecione uma marca-</option>
+					<option th:each="marca : ${marcas}"
+					    th:value="${marca.id}"
+						th:text="${marca.nome}"></option>
+				</select>
+				<div th:errors="*{marcaId}" class="invalid-feedback"></div>
+			</div>
+
+			<div class="form-group">
+				<label for="modelo"> Modelo: </label> 
+				<input class="form-control" type="text" th:field="*{modelo}"
+					th:classappend="${#fields.hasErrors('modelo')} ? 'is-invalid'">
+					<div th:errors="*{modelo}" class="invalid-feedback"></div>
+			</div>
+			<div class="form-group">
+				<label for="placa"> Placa: </label> <input class="form-control"
+					type="text" th:field="*{placa}"
+					 th:classappend="${#fields.hasErrors('placa')} ? 'is-invalid'">
+                <div th:errors="*{placa}" class="invalid-feedback"></div>
+			</div>
+			<div class="form-group">
+				<label for="ano"> Ano: </label> <input class="form-control"
+					type="number" th:field="*{ano}"
+					 th:classappend="${#fields.hasErrors('ano')} ? 'is-invalid'">
+                <div th:errors="*{ano}" class="invalid-feedback"></div>
+			</div>
+			<div class="form-group">
+				<label for="placa"> Carga Maxima: </label> <input
+					class="form-control" type="number"
+					th:field="*{cargaMaxima}"
+					th:classappend="${#fields.hasErrors('cargaMaxima')} ? 'is-invalid'">
+                <div th:errors="*{cargaMaxima}" class="invalid-feedback"></div>
+			</div>
+			
+			<button type="submit" class="btn btn-primary">
+                <span th:text="${caminhao.id != null} ? 'Atualizar' : 'Cadastrar'"></span>
+            </button>
+             <a th:href="@{/caminhoes}" class="btn btn-secondary">Cancelar</a>
+		</form>
+	</div>
+	<div th:replace="~{fragmentos/footer :: footer}"></div>
+</body>
+</html>

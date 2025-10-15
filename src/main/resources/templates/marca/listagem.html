@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragmentos/head :: head('Listagem Marcas')}"></head>
+<body>
+<header th:replace="~{fragmentos/header :: header(activePage='marca')}"></header>
+    <h1> Lista da Marca</h1>
+    <a href="/marca/formulario">Novo</a>
+    <table>
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Pais</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="marca : ${lista}">
+                <td th:text="${marca.nome}"></td>
+                <td th:text="${marca.pais}"></td>
+                 
+                <td>
+					<a th:href="@{/marca/formulario?id={id}(id=${marca.id})}"><button>Editar</button></a> 
+					
+					<form action="/marca" method="post">
+						<input type="hidden" name="_method" value="delete">
+						<input type="hidden" name="id" th:value="${marca.id}">
+						<input type="submit" value="Excluir">
+					</form>
+				</td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>
