@@ -1,5 +1,6 @@
 package com.example.frota.produto;
 
+import com.example.frota.caminhao.AtualizacaoCaminhao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -72,5 +73,12 @@ public class ProdutoController {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/produto";
+    }
+
+    @PutMapping
+    @Transactional
+    public String atualizar (AtualizacaoProduto dados) {
+        produtoService.salvarOuAtualizar(dados);
+        return "redirect:marca";
     }
 }

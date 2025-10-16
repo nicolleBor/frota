@@ -1,36 +1,62 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
-<head th:replace="fragmentos/head :: head('Listagem de Caixas')"></head>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragmentos/head :: head('Listagem de Caixas')}"></head>
 <body>
-<div th:replace="fragmentos/header :: header"></div>
+<header th:replace="~{fragmentos/header :: header(activePage='Caixa')}"></header>
 
-<div class="container mt-4">
-    <h2>Listagem de Caixas</h2>
-    <a class="btn btn-primary mb-3" th:href="@{/caixa/formulario}">Nova Caixa</a>
+<div class="container-fluid" style="max-width: 900px; margin: 0 auto;">
+    <h2 class="text-center"
+        th:text="${caixa != null} ? 'Editar Caixa' : 'Lista de Caixas'"></h2>
 
-    <table class="table table-striped">
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Nome</th>
-            <th>Volume (m³)</th>
-            <th>Ações</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="caixa : ${listaCaixas}">
-            <td th:text="${caixa.id}"></td>
-            <td th:text="${caixa.nome}"></td>
-            <td th:text="${caixa.volume}"></td>
-            <td>
-                <a class="btn btn-warning btn-sm" th:href="@{'/caixa/formulario?id=' + ${caixa.id}}">Editar</a>
-                <a class="btn btn-danger btn-sm" th:href="@{'/caixa/delete/' + ${caixa.id}}">Excluir</a>
-            </td>
-        </tr>
-        </tbody>
-    </table>
+    <div th:if="${message != null}"
+         class="alert alert-success alert-dismissible fade show text-center"
+         role="alert">
+        [[${message}]]
+        <button type="button" class="close btn-sm" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+
+    <a href="/caixa/formulario" class="btn btn-primary mb-3">Nova Caixa</a>
+
+    <div th:if="${listaCaixas != null and listaCaixas.size() > 0}">
+        <table class="table table-hover table-responsive-xl">
+            <thead class="thead-light">
+            <tr>
+                <th scope="col">Nome</th>
+                <th scope="col">Altura (cm)</th>
+                <th scope="col">Largura (cm)</th>
+                <th scope="col">Comprimento (cm)</th>
+                <th scope="col">Volume (m³)</th>
+                <th scope="col">Ações</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="caixa : ${listaCaixas}">
+                <td th:text="${caixa.nome}"></td>
+                <td th:text="${caixa.altura}"></td>
+                <td th:text="${caixa.largura}"></td>
+                <td th:text="${caixa.comprimento}"></td>
+                <td th:text="${caixa.volume}"></td>
+                <td>
+                    <a th:href="@{'/caixa/formulario?id=' + ${caixa.id}}"
+                       title="Editar Caixa"
+                       class="fa-regular fa-pen-to-square icon-dark"></a>
+                    &nbsp;
+                    <a th:href="@{'/caixa/delete/' + ${caixa.id}}"
+                       title="Excluir Caixa"
+                       class="fa-regular fa-trash-can icon-dark btn-delete"></a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div th:if="${listaCaixas == null or listaCaixas.size() == 0}" class="text-center mt-4">
+        <p>Nenhuma caixa cadastrada até o momento.</p>
+    </div>
 </div>
 
-<div th:replace="fragmentos/footer :: footer"></div>
+<div th:replace="~{fragmentos/footer :: footer}"></div>
 </body>
 </html>

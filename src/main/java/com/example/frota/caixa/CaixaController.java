@@ -1,5 +1,6 @@
 package com.example.frota.caixa;
 
+import com.example.frota.marca.DadosAtualizacaoMarca;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -71,6 +72,13 @@ public class CaixaController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
+        return "redirect:/caixa";
+    }
+
+    @PutMapping
+    @Transactional
+    public String atualizar (AtualizacaoCaixa dados) {
+        caixaService.salvarOuAtualizar(dados);
         return "redirect:/caixa";
     }
 }

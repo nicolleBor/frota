@@ -36,15 +36,15 @@
 	                <td th:text="${caminhao.ano}"></td>
 	                <td th:text="${caminhao.cargaMaxima}"></td>
 	                <td th:text="${caminhao.marca.nome}"></td>
-	               
-						<!-- <a th:href="@{/caminhao/formulario?id={id}(id=${caminhao.id})}"><button>Editar</button></a> 
+
+						<!-- <a th:href="@{/caminhao/formulario?id={id}(id=${caminhao.id})}"><button>Editar</button></a>
 						<form action="/caminhao" method="post">
 							<input type="hidden" name="_method" value="delete">
 							<input type="hidden" name="id" th:value="${caminhao.id}">
 							<input type="submit" value="Excluir">
 						</form> -->
-						
-						
+
+
 					<td><a th:href="@{'/caminhao/formulario/' + ${caminhao.id}}"
 							title="Editar o Caminhao"
 							class="fa-regular fa-pen-to-square icon-dark"></a> &nbsp; <a

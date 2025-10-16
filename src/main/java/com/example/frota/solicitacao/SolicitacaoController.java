@@ -1,5 +1,6 @@
 package com.example.frota.solicitacao;
 
+import com.example.frota.caminhao.AtualizacaoCaminhao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -91,5 +92,12 @@ public class SolicitacaoController {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/solicitacao";
+    }
+
+    @PutMapping
+    @Transactional
+    public String atualizar (AtualizacaoSolicitacao dados) {
+        solicitacaoService.salvarOuAtualizar(dados);
+        return "redirect:marca";
     }
 }
