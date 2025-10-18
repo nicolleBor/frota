@@ -43,4 +43,8 @@ public class ProdutoService {
     public void apagarPorId(Long id) {
         produtoRepository.deleteById(id);
     }
+    
+    public long contarTotal() {
+        return produtoRepository.count();
+    }
 }

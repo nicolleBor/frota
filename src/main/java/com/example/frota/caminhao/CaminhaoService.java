@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import jakarta.persistence.EntityNotFoundException;
 
 import com.example.frota.marca.Marca;
-import com.example.frota.marca.MarcaService;
 
 @Service
 public class CaminhaoService {
@@ -19,28 +18,19 @@ public class CaminhaoService {
 	private CaminhaoRepository caminhaoRepository;
 	
 	@Autowired
-	private MarcaService marcaService;
-	
-	@Autowired
 	private CaminhaoMapper caminhaoMapper;
 
     @Transactional
 	public Caminhao salvarOuAtualizar(AtualizacaoCaminhao dto) {
-        // Valida se a marca existe
-        Marca marca = marcaService.procurarPorId(dto.marcaId())
-            .orElseThrow(() -> new EntityNotFoundException("Marca não encontrada com ID: " + dto.marcaId()));
         if (dto.id() != null) {
             // atualizando Busca existente e atualiza
             Caminhao existente = caminhaoRepository.findById(dto.id())
                 .orElseThrow(() -> new EntityNotFoundException("Caminhão não encontrado com ID: " + dto.id()));
             caminhaoMapper.updateEntityFromDto(dto, existente);
-            existente.setMarca(marca); // Atualiza a marca
             return caminhaoRepository.save(existente);
         } else {
             // criando Novo caminhão
             Caminhao novoCaminhao = caminhaoMapper.toEntityFromAtualizacao(dto);
-            novoCaminhao.setMarca(marca); // Define a marca completa
-            
             return caminhaoRepository.save(novoCaminhao);
         }
     }
@@ -56,5 +46,9 @@ public class CaminhaoService {
 	
 	public Optional<Caminhao> procurarPorId(Long id) {
 	    return caminhaoRepository.findById(id);
+	}
+	
+	public long contarTotal() {
+	    return caminhaoRepository.count();
 	}
 }

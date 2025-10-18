@@ -6,6 +6,7 @@ import java.util.Optional;
 import com.example.frota.caixa.Caixa;
 import com.example.frota.caminhao.Caminhao;
 import com.example.frota.produto.Produto;
+import com.example.frota.api.externo.FreteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +35,9 @@ public class SolicitacaoService {
     @Autowired
     private SolicitacaoMapper mapper;
 
+    @Autowired
+    private FreteService freteService;
+
     @Transactional
     public SolicitacaoTransporte salvarOuAtualizar(AtualizacaoSolicitacao dto) {
         Produto produto = null;
@@ -56,20 +60,81 @@ public class SolicitacaoService {
             SolicitacaoTransporte existente = solicitacaoRepository.findById(dto.id())
                     .orElseThrow(() -> new EntityNotFoundException("Solicitação não encontrada com ID: " + dto.id()));
 
-            mapper.updateEntityFromDto(dto, existente, produto, caixa, caminhao);
+            existente.atualizarInformacoes(dto, produto, caixa, caminhao);
 
             if (!existente.produtoCabeNaCaixa())
                 throw new IllegalArgumentException("Produto não cabe na caixa selecionada");
 
+            // Recalcular frete se origem ou destino mudaram
+            if (dto.origem() != null || dto.destino() != null) {
+                calcularFreteParaSolicitacao(existente);
+            }
+
             return solicitacaoRepository.save(existente);
 
         } else {
-            SolicitacaoTransporte nova = mapper.toEntityFromAtualizacao(dto, produto, caixa, caminhao);
+            SolicitacaoTransporte nova = new SolicitacaoTransporte(
+                new CadastroSolicitacao(
+                    dto.caminhaoId(),
+                    dto.produtoId(),
+                    dto.caixaId(),
+                    dto.quantidade(),
+                    dto.origem(),
+                    dto.destino(),
+                    dto.observacoes()
+                ),
+                produto, caixa, caminhao
+            );
 
             if (!nova.produtoCabeNaCaixa())
                 throw new IllegalArgumentException("Produto não cabe na caixa selecionada");
 
+            // Calcular frete automaticamente
+            calcularFreteParaSolicitacao(nova);
+
             return solicitacaoRepository.save(nova);
+        }
+    }
+
+    private void calcularFreteParaSolicitacao(SolicitacaoTransporte solicitacao) {
+        try {
+            // Determinar tipo de cálculo baseado no produto
+            String tipoCalculo = determinarTipoCalculo(solicitacao);
+            
+            // Calcular frete usando o serviço externo
+            var resultadoFrete = freteService.calcularFrete(
+                solicitacao.getOrigem(),
+                solicitacao.getDestino(),
+                solicitacao.getProduto().getPeso(),
+                tipoCalculo
+            );
+
+            // Aplicar os resultados na solicitação
+            double distanciaKm = (Double) resultadoFrete.get("distanciaKm");
+            double valorPorKm = (Double) resultadoFrete.get("valorPorKm");
+            double valorPedagio = (Double) resultadoFrete.get("pedagio");
+
+            solicitacao.calcularFrete(valorPorKm, distanciaKm);
+            solicitacao.setValorPedagio(valorPedagio);
+
+        } catch (Exception e) {
+            // Fallback: usar valores padrão
+            solicitacao.calcularFrete(1.50, 100.0); // R$ 1,50/km, 100km
+            solicitacao.setValorPedagio(25.0); // R$ 25,00 pedágio
+        }
+    }
+
+    private String determinarTipoCalculo(SolicitacaoTransporte solicitacao) {
+        double peso = solicitacao.getProduto().getPeso();
+        double volume = solicitacao.getProduto().getVolume();
+        
+        // Lógica para determinar o tipo de cálculo
+        if (peso > 100) {
+            return "peso"; // Produtos pesados
+        } else if (volume > 0.5) {
+            return "volume"; // Produtos volumosos
+        } else {
+            return "caixa"; // Produtos leves e pequenos
         }
     }
 
@@ -84,5 +149,9 @@ public class SolicitacaoService {
     @Transactional
     public void apagarPorId(Long id) {
         solicitacaoRepository.deleteById(id);
+    }
+    
+    public long contarTotal() {
+        return solicitacaoRepository.count();
     }
 }

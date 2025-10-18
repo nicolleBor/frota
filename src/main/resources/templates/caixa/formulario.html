@@ -2,7 +2,7 @@
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragmentos/head :: head('Formulário Caixa')}"></head>
 <body>
-<header th:replace="~{fragmentos/header :: header(activePage='Caixa')}"></header>
+<header th:replace="fragmentos/header :: header('caixa')"></header>
 
 <div class="container-fluid" style="max-width: 700px; margin: 0 auto;">
     <h2 class="text-center" th:text="${caixa != null} ? 'Editar Caixa' : 'Nova Caixa'"></h2>
@@ -13,24 +13,38 @@
         <div class="form-group">
             <label for="nome">Nome da Caixa:</label>
             <input type="text" id="nome" th:field="*{nome}" class="form-control" required>
+            <div th:if="${#fields.hasErrors('nome')}" class="invalid-feedback d-block" th:errors="*{nome}"></div>
         </div>
 
         <div class="form-group">
-            <label for="largura">Largura (cm):</label>
-            <input type="number" id="largura" th:field="*{largura}" class="form-control" required>
+            <label for="material">Material:</label>
+            <input type="text" id="material" th:field="*{material}" class="form-control" required>
+            <div th:if="${#fields.hasErrors('material')}" class="invalid-feedback d-block" th:errors="*{material}"></div>
         </div>
 
         <div class="form-group">
-            <label for="altura">Altura (cm):</label>
-            <input type="number" id="altura" th:field="*{altura}" class="form-control" required>
+            <label for="comprimento">Comprimento (m):</label>
+            <input type="number" id="comprimento" th:field="*{comprimento}" class="form-control" step="0.01" min="0.1" max="5.0" required>
+            <div th:if="${#fields.hasErrors('comprimento')}" class="invalid-feedback d-block" th:errors="*{comprimento}"></div>
         </div>
 
         <div class="form-group">
-            <label for="comprimento">Comprimento (cm):</label>
-            <input type="number" id="comprimento" th:field="*{comprimento}" class="form-control" required>
+            <label for="largura">Largura (m):</label>
+            <input type="number" id="largura" th:field="*{largura}" class="form-control" step="0.01" min="0.1" max="3.0" required>
+            <div th:if="${#fields.hasErrors('largura')}" class="invalid-feedback d-block" th:errors="*{largura}"></div>
         </div>
 
-        <!-- Volume foi removido, pois é calculado automaticamente no backend -->
+        <div class="form-group">
+            <label for="altura">Altura (m):</label>
+            <input type="number" id="altura" th:field="*{altura}" class="form-control" step="0.01" min="0.1" max="3.0" required>
+            <div th:if="${#fields.hasErrors('altura')}" class="invalid-feedback d-block" th:errors="*{altura}"></div>
+        </div>
+
+        <div class="form-group">
+            <label for="limitePeso">Limite de Peso (kg):</label>
+            <input type="number" id="limitePeso" th:field="*{limitePeso}" class="form-control" step="0.1" min="1.0" max="1000.0" required>
+            <div th:if="${#fields.hasErrors('limitePeso')}" class="invalid-feedback d-block" th:errors="*{limitePeso}"></div>
+        </div>
 
         <div class="text-center mt-4">
             <button type="submit" class="btn btn-success">💾 Salvar</button>

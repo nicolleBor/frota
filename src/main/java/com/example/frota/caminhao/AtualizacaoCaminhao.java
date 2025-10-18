@@ -14,14 +14,7 @@ public record AtualizacaoCaminhao(
 	    @Min(value = 2000, message = "Ano deve ser a partir de 2000")
 	    Integer ano,
 	    
-	    @NotNull(message = "Carga máxima é obrigatória")
-	    @Positive(message = "Carga máxima deve ser positiva")
-	    Double cargaMaxima,
-	    
-	    @NotNull(message = "Marca é obrigatória")
-	    Long marcaId,
-
-        @NotNull(message = "Comprimento é obrigatório")
+	    @NotNull(message = "Comprimento é obrigatório")
         @DecimalMin(value = "4.0", message = "Comprimento mínimo 4 metros")
         @DecimalMax(value = "20.0", message = "Comprimento máximo 20 metros")
         Double comprimento,

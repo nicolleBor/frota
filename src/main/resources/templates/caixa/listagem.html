@@ -2,11 +2,10 @@
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragmentos/head :: head('Listagem de Caixas')}"></head>
 <body>
-<header th:replace="~{fragmentos/header :: header(activePage='Caixa')}"></header>
+<header th:replace="fragmentos/header :: header('caixa')"></header>
 
-<div class="container-fluid" style="max-width: 900px; margin: 0 auto;">
-    <h2 class="text-center"
-        th:text="${caixa != null} ? 'Editar Caixa' : 'Lista de Caixas'"></h2>
+<div class="container-fluid" style="max-width: 1200px; margin: 0 auto;">
+    <h2 class="text-center">Lista de Caixas</h2>
 
     <div th:if="${message != null}"
          class="alert alert-success alert-dismissible fade show text-center"
@@ -17,27 +16,43 @@
         </button>
     </div>
 
-    <a href="/caixa/formulario" class="btn btn-primary mb-3">Nova Caixa</a>
+    <div th:if="${error != null}"
+         class="alert alert-danger alert-dismissible fade show text-center"
+         role="alert">
+        [[${error}]]
+        <button type="button" class="close btn-sm" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+
+    <div class="text-center mb-3">
+        <a href="/caixa/formulario" class="btn btn-primary">📦 Nova Caixa</a>
+        <a href="/home/dashboard" class="btn btn-info">🏠 Voltar ao Dashboard</a>
+    </div>
 
     <div th:if="${listaCaixas != null and listaCaixas.size() > 0}">
         <table class="table table-hover table-responsive-xl">
             <thead class="thead-light">
             <tr>
                 <th scope="col">Nome</th>
-                <th scope="col">Altura (cm)</th>
-                <th scope="col">Largura (cm)</th>
-                <th scope="col">Comprimento (cm)</th>
+                <th scope="col">Material</th>
+                <th scope="col">Comprimento (m)</th>
+                <th scope="col">Largura (m)</th>
+                <th scope="col">Altura (m)</th>
                 <th scope="col">Volume (m³)</th>
+                <th scope="col">Limite Peso (kg)</th>
                 <th scope="col">Ações</th>
             </tr>
             </thead>
             <tbody>
             <tr th:each="caixa : ${listaCaixas}">
                 <td th:text="${caixa.nome}"></td>
-                <td th:text="${caixa.altura}"></td>
-                <td th:text="${caixa.largura}"></td>
-                <td th:text="${caixa.comprimento}"></td>
-                <td th:text="${caixa.volume}"></td>
+                <td th:text="${caixa.material}"></td>
+                <td th:text="${#numbers.formatDecimal(caixa.comprimento, 1, 2)}"></td>
+                <td th:text="${#numbers.formatDecimal(caixa.largura, 1, 2)}"></td>
+                <td th:text="${#numbers.formatDecimal(caixa.altura, 1, 2)}"></td>
+                <td th:text="${#numbers.formatDecimal(caixa.volume, 1, 3)}"></td>
+                <td th:text="${#numbers.formatDecimal(caixa.limitePeso, 1, 1)}"></td>
                 <td>
                     <a th:href="@{'/caixa/formulario?id=' + ${caixa.id}}"
                        title="Editar Caixa"
@@ -52,8 +67,9 @@
         </table>
     </div>
 
-    <div th:if="${listaCaixas == null or listaCaixas.size() == 0}" class="text-center mt-4">
-        <p>Nenhuma caixa cadastrada até o momento.</p>
+    <div th:if="${listaCaixas == null or listaCaixas.size() == 0}" class="text-center mt-5">
+        <p class="text-muted">Nenhuma caixa cadastrada ainda.</p>
+        <a href="/caixa/formulario" class="btn btn-primary">📦 Cadastrar Primeira Caixa</a>
     </div>
 </div>
 

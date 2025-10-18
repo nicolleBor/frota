@@ -1,14 +1,12 @@
 package com.example.frota.caminhao;
 
 
-import com.example.frota.marca.DadosAtualizacaoMarca;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import com.example.frota.marca.MarcaService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -23,9 +21,6 @@ public class CaminhaoController {
 	
 	@Autowired
     private CaminhaoMapper caminhaoMapper;
-	
-	@Autowired
-	private MarcaService marcaService;
 	
 	@GetMapping                 
 	public String carregaPaginaFormulario ( Model model){ 
@@ -44,10 +39,9 @@ public class CaminhaoController {
             dto = caminhaoMapper.toAtualizacaoDto(caminhao);
         } else {
             // criação: DTO vazio
-            dto = new AtualizacaoCaminhao(null, "", "", null, null, null, null,null,null);
+            dto = new AtualizacaoCaminhao(null, "", "", null, null, null, null);
         }
         model.addAttribute("caminhao", dto);
-        model.addAttribute("marcas", marcaService.procurarTodos());
         return "caminhao/formulario";
     }
 	
@@ -67,7 +61,6 @@ public class CaminhaoController {
 			if(id != null) {
 				Caminhao caminhao = caminhaoService.procurarPorId(id)
 						.orElseThrow(() -> new EntityNotFoundException("Caminhao não encontrado"));
-				model.addAttribute("marcas", marcaService.procurarTodos());
 				//mapear caminhão para AtualizacaoCaminhao
 				dto = caminhaoMapper.toAtualizacaoDto(caminhao);
 				model.addAttribute("caminhao", dto);
@@ -87,8 +80,6 @@ public class CaminhaoController {
                         RedirectAttributes redirectAttributes,
                         Model model) {
 		if (result.hasErrors()) {
-	        // Recarrega dados necessários para mostrar erros
-	        model.addAttribute("marcas", marcaService.procurarTodos());
 	        return "caminhao/formulario";
 	    }
 	    try {

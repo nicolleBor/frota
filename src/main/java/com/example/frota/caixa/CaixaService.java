@@ -23,10 +23,11 @@ public class CaixaService {
         if (dto.id() != null) {
             Caixa existente = caixaRepository.findById(dto.id())
                     .orElseThrow(() -> new EntityNotFoundException("Caixa não encontrada com ID: " + dto.id()));
-            caixaMapper.updateEntityFromDto(dto, existente);
+            existente.atualizarInformacoes(dto);
             return caixaRepository.save(existente);
         } else {
-            Caixa nova = caixaMapper.toEntityFromAtualizacao(dto);
+            Caixa nova = new Caixa();
+            nova.atualizarInformacoes(dto);
             return caixaRepository.save(nova);
         }
     }
@@ -42,5 +43,9 @@ public class CaixaService {
     @Transactional
     public void apagarPorId(Long id) {
         caixaRepository.deleteById(id);
+    }
+    
+    public long contarTotal() {
+        return caixaRepository.count();
     }
 }

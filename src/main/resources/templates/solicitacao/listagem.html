@@ -1,38 +1,55 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="fragmentos/head :: head('Listagem de Solicitações')"></head>
 <body>
-<div th:replace="fragmentos/header :: header"></div>
+<header th:replace="fragmentos/header :: header('solicitacao')"></header>
 
-<div class="container mt-4">
-    <h2>Listagem de Solicitações</h2>
-    <a class="btn btn-primary mb-3" th:href="@{/solicitacao/formulario}">Nova Solicitação</a>
+<div class="container-fluid" style="max-width: 1400px; margin: 0 auto;">
+    <h2 class="text-center">Lista de Solicitações</h2>
 
-    <table class="table table-striped">
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Produto</th>
-            <th>Caixa</th>
-            <th>Quantidade</th>
-            <th>Status</th>
-            <th>Ações</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="s : ${listaSolicitacoes}">
-            <td th:text="${s.id}"></td>
-            <td th:text="${s.produto.nome}"></td>
-            <td th:text="${s.caixa.nome}"></td>
-            <td th:text="${s.quantidade}"></td>
-            <td th:text="${s.status}"></td>
-            <td>
-                <a class="btn btn-warning btn-sm" th:href="@{'/solicitacao/formulario?id=' + ${s.id}}">Editar</a>
-                <a class="btn btn-danger btn-sm" th:href="@{'/solicitacao/delete/' + ${s.id}}">Excluir</a>
-            </td>
-        </tr>
-        </tbody>
-    </table>
+    <div class="text-center mb-3">
+        <a href="/solicitacao/formulario" class="btn btn-primary">🚛 Nova Solicitação</a>
+        <a href="/home/dashboard" class="btn btn-info">🏠 Voltar ao Dashboard</a>
+    </div>
+
+    <div th:if="${listaSolicitacoes.size() > 0}">
+        <table class="table table-hover table-responsive-xl">
+            <thead class="thead-light">
+                <tr>
+                    <th scope="col">Caminhão</th>
+                    <th scope="col">Produto</th>
+                    <th scope="col">Caixa</th>
+                    <th scope="col">Quantidade</th>
+                    <th scope="col">Origem</th>
+                    <th scope="col">Destino</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Valor Frete</th>
+                    <th scope="col">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="s : ${listaSolicitacoes}">
+                    <td th:text="${s.caminhao.modelo + ' - ' + s.caminhao.placa}"></td>
+                    <td th:text="${s.produto.nome}"></td>
+                    <td th:text="${s.caixa.nome}"></td>
+                    <td th:text="${s.quantidade}"></td>
+                    <td th:text="${s.origem}"></td>
+                    <td th:text="${s.destino}"></td>
+                    <td th:text="${s.status}"></td>
+                    <td th:text="${s.valorFrete != null ? 'R$ ' + #numbers.formatDecimal(s.valorFrete, 1, 2) : 'Não calculado'}"></td>
+                    <td>
+                        <a class="btn btn-warning btn-sm" th:href="@{'/solicitacao/formulario?id=' + ${s.id}}" target="_self">✏️ Editar</a>
+                        <a class="btn btn-danger btn-sm" th:href="@{'/solicitacao/delete/' + ${s.id}}" target="_self">🗑️ Excluir</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div th:if="${listaSolicitacoes.size() == 0}" class="text-center mt-5">
+        <p class="text-muted">Nenhuma solicitação cadastrada ainda.</p>
+        <a href="/solicitacao/formulario" class="btn btn-primary">🚛 Cadastrar Primeira Solicitação</a>
+    </div>
 </div>
 
 <div th:replace="fragmentos/footer :: footer"></div>

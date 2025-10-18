@@ -1,39 +1,114 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
-<head th:replace="fragmentos/head :: head('Solicitação de Transporte')"></head>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragmentos/head :: head('Formulário Solicitação')}"></head>
 <body>
-<div th:replace="fragmentos/header :: header"></div>
+<header th:replace="~{fragmentos/header :: header('solicitacao')}"></header>
 
-<div class="container mt-4">
-    <h2 th:text="${solicitacao.id != null} ? 'Editar Solicitação' : 'Nova Solicitação'"></h2>
+<div class="container-fluid" style="max-width: 800px; margin: 0 auto;">
+    <h2 class="text-center" th:text="${solicitacao.id != null} ? 'Editar Solicitação' : 'Nova Solicitação'"></h2>
+    
+    <div class="alert alert-info">
+        <h5>🚛 Como funciona o cálculo de frete:</h5>
+        <ul class="mb-0">
+            <li><strong>Distância:</strong> Calculada automaticamente usando APIs de roteamento</li>
+            <li><strong>Peso Cubado:</strong> Volume × Fator de Cubagem (300 kg/m³)</li>
+            <li><strong>Peso Cobrado:</strong> Maior entre peso real e peso cubado</li>
+            <li><strong>Frete:</strong> Peso Cobrado × Valor por km × Distância + Pedágio</li>
+        </ul>
+    </div>
 
-    <form th:action="@{/solicitacao/salvar}" th:object="${solicitacao}" method="post">
+    <form th:action="@{/solicitacao/salvar}" method="post" th:object="${solicitacao}">
         <input type="hidden" th:field="*{id}"/>
 
-        <div class="mb-3">
-            <label class="form-label">Produto</label>
-            <select class="form-select" th:field="*{produtoId}">
-                <option th:each="p : ${produtos}" th:value="${p.id}" th:text="${p.nome}"></option>
+        <div class="form-group">
+            <label for="caminhaoId">Caminhão:</label>
+            <select id="caminhaoId" th:field="*{caminhaoId}" class="form-control" required>
+                <option value="">Selecione um caminhão</option>
+                <option th:each="c : ${caminhoes}" th:value="${c.id}" th:text="${c.modelo + ' - ' + c.placa}"></option>
             </select>
+            <div th:if="${#fields.hasErrors('caminhaoId')}" class="invalid-feedback d-block" th:errors="*{caminhaoId}"></div>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Caixa</label>
-            <select class="form-select" th:field="*{caixaId}">
-                <option th:each="c : ${caixas}" th:value="${c.id}" th:text="${c.nome}"></option>
+        <div class="form-group">
+            <label for="produtoId">Produto:</label>
+            <select id="produtoId" th:field="*{produtoId}" class="form-control" required>
+                <option value="">Selecione um produto</option>
+                <option th:each="p : ${produtos}" th:value="${p.id}" th:text="${p.nome + ' (' + p.peso + 'kg)'}"></option>
             </select>
+            <div th:if="${#fields.hasErrors('produtoId')}" class="invalid-feedback d-block" th:errors="*{produtoId}"></div>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Quantidade</label>
-            <input type="number" class="form-control" th:field="*{quantidade}" required>
+        <div class="form-group">
+            <label for="caixaId">Caixa:</label>
+            <select id="caixaId" th:field="*{caixaId}" class="form-control" required>
+                <option value="">Selecione uma caixa</option>
+                <option th:each="c : ${caixas}" th:value="${c.id}" th:text="${c.nome + ' (' + c.material + ')'}"></option>
+            </select>
+            <div th:if="${#fields.hasErrors('caixaId')}" class="invalid-feedback d-block" th:errors="*{caixaId}"></div>
         </div>
 
-        <button type="submit" class="btn btn-success">Salvar</button>
-        <a class="btn btn-secondary" th:href="@{/solicitacao}">Cancelar</a>
+        <div class="form-group">
+            <label for="quantidade">Quantidade:</label>
+            <input type="number" id="quantidade" th:field="*{quantidade}" class="form-control" min="1" max="1000" required>
+            <div th:if="${#fields.hasErrors('quantidade')}" class="invalid-feedback d-block" th:errors="*{quantidade}"></div>
+        </div>
+
+        <div class="form-group">
+            <label for="origem">Origem:</label>
+            <input type="text" id="origem" th:field="*{origem}" class="form-control" placeholder="Ex: São Paulo, SP ou -23.5505,-46.6333" required>
+            <small class="form-text text-muted">
+                💡 Digite o nome da cidade (ex: "São Paulo") ou coordenadas (ex: "-23.5505,-46.6333")
+            </small>
+            <div th:if="${#fields.hasErrors('origem')}" class="invalid-feedback d-block" th:errors="*{origem}"></div>
+        </div>
+
+        <div class="form-group">
+            <label for="destino">Destino:</label>
+            <input type="text" id="destino" th:field="*{destino}" class="form-control" placeholder="Ex: Rio de Janeiro, RJ ou -22.9068,-43.1729" required>
+            <small class="form-text text-muted">
+                💡 Digite o nome da cidade (ex: "Rio de Janeiro") ou coordenadas (ex: "-22.9068,-43.1729")
+            </small>
+            <div th:if="${#fields.hasErrors('destino')}" class="invalid-feedback d-block" th:errors="*{destino}"></div>
+        </div>
+
+        <div class="form-group">
+            <label for="observacoes">Observações:</label>
+            <textarea id="observacoes" th:field="*{observacoes}" class="form-control" rows="3" placeholder="Observações adicionais sobre o transporte"></textarea>
+            <div th:if="${#fields.hasErrors('observacoes')}" class="invalid-feedback d-block" th:errors="*{observacoes}"></div>
+        </div>
+
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-success">🚛 Calcular Frete</button>
+            <button type="button" class="btn btn-info" onclick="testarCalculo()">🧮 Testar Cálculo</button>
+            <a href="/solicitacao" class="btn btn-secondary">↩ Voltar</a>
+        </div>
     </form>
 </div>
 
-<div th:replace="fragmentos/footer :: footer"></div>
+    <script>
+    function testarCalculo() {
+        const origem = document.getElementById('origem').value;
+        const destino = document.getElementById('destino').value;
+        const produtoId = document.getElementById('produtoId').value;
+        const caminhaoId = document.getElementById('caminhaoId').value;
+        const caixaId = document.getElementById('caixaId').value;
+        
+        if (!origem || !destino || !produtoId) {
+            alert('Por favor, preencha origem, destino e produto para testar o cálculo.');
+            return;
+        }
+        
+        let url = `/solicitacao/calcular-frete?origem=${encodeURIComponent(origem)}&destino=${encodeURIComponent(destino)}&produtoId=${produtoId}`;
+        
+        // Adicionar caminhão e caixa se selecionados para cálculo completo
+        if (caminhaoId) url += `&caminhaoId=${caminhaoId}`;
+        if (caixaId) url += `&caixaId=${caixaId}`;
+        
+        // Forçar abertura em nova aba
+        window.open(url, '_blank', 'noopener,noreferrer');
+    }
+    </script>
+
+<div th:replace="~{fragmentos/footer :: footer}"></div>
 </body>
 </html>

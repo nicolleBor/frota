@@ -1,9 +1,6 @@
 package com.example.frota.caminhao;
 
-import com.example.frota.marca.Marca;
-
 import jakarta.persistence.*;
-import jdk.jfr.TransitionFrom;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -24,52 +21,46 @@ public class Caminhao {
 	@Column(name = "caminhao_id")
 	private Long id;
 	private String modelo;
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "marca_id", referencedColumnName = "marca_id")
-	private Marca marca;
 	private String placa;
-	private double cargaMaxima;
 	private int ano;
+    
+    // Dimensões físicas do caminhão (em metros)
     private double comprimento;
     private double largura;
     private double altura;
-    private final double fatorCubagem = 300.0;
+    
+    // Fator de cubagem para transporte rodoviário: 300 kg/m³
+    @Column(name = "fator_cubagem")
+    private double fatorCubagem = 300.0;
+    
+    // Atributo derivado para metragem cúbica
     @Transient
-    public double getMetragemCubica(){
+    public double getMetragemCubica() {
         return comprimento * largura * altura;
+    }
+    
+    // Método para calcular peso cubado de um produto
+    @Transient
+    public double calcularPesoCubado(double volumeProduto) {
+        return volumeProduto * fatorCubagem;
     }
 
 
-	public Caminhao(CadastroCaminhao dados, Marca marca) {
+	public Caminhao(CadastroCaminhao dados) {
 		this.modelo = dados.modelo();
 		this.placa = dados.placa();
-		this.cargaMaxima = dados.cargaMaxima();
-		this.marca = marca;
-		this.ano= dados.ano();
+		this.ano = dados.ano();
         this.comprimento = dados.comprimento();
         this.largura = dados.largura();
         this.altura = dados.altura();
-	}
-	public Caminhao(AtualizacaoCaminhao dados, Marca marca) {
-		this.modelo = dados.modelo();
-		this.placa = dados.placa();
-		this.cargaMaxima = dados.cargaMaxima();
-		this.marca = marca;
-		this.ano= dados.ano();
-        this.comprimento = dados.comprimento();
-        this.largura = dados.largura();
-        this.altura = dados.altura();
+        this.fatorCubagem = 300.0; // Valor padrão fixo
 	}
 	
-	public void atualizarInformacoes(AtualizacaoCaminhao dados, Marca marca) {
+	public void atualizarInformacoes(AtualizacaoCaminhao dados) {
 		if (dados.modelo() != null )
 			this.modelo = dados.modelo();
 		if (dados.placa() != null)
-			this.placa =dados.placa();
-		if (dados.cargaMaxima() != 0)
-			this.cargaMaxima = dados.cargaMaxima();
-		if (marca != null)
-			this.marca = marca;
+			this.placa = dados.placa();
 		if (dados.ano() != 0)
 			this.ano = dados.ano();
         if (dados.comprimento() != 0)
@@ -78,6 +69,7 @@ public class Caminhao {
             this.largura = dados.largura();
         if (dados.altura() != 0)
             this.altura = dados.altura();
+        // fatorCubagem não é alterado - mantém o valor padrão de 300.0
 	}
 	
 }

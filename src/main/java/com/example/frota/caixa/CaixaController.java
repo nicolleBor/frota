@@ -1,6 +1,5 @@
 package com.example.frota.caixa;
 
-import com.example.frota.marca.DadosAtualizacaoMarca;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

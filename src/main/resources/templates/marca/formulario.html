@@ -1,29 +1,34 @@
 <!DOCTYPE html>
-<html lang ="en" xmlns:th="http://thymeleaf.org" >
-<head th:replace="~{fragmentos/head :: head('Cadastro Marcas')}"></head>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragmentos/head :: head('Formulário Marca')}"></head>
 <body>
-<header th:replace="~{fragmentos/header :: header(activePage='marca')}"></header>
+<header th:replace="fragmentos/header :: header('marca')"></header>
 
-<div layout:fragment="header">
-	<div class="box">
-		<h1>Cadastro Marca</h1>
-		<form method="post" action="/marca">
-			<input type="hidden" name="_method" value="put" th:if="${marca!= null}">
-			<input type="hidden" name="id" th:value="${marca?.id}">
-			
-			<div>
-				<label for="nome"> Nome: </label>
-				<input type="text" id="nome" name="nome" th:value="${marca?.nome}">
-			</div>
-			
-			<div>
-				<label for="pais"> Pais: </label>
-				<input type="text" id="pais" name="pais" th:value="${marca?.pais}">
-			</div>
-			
-			<input type="submit" value="Cadastrar">
-		</form>
-	</div>
+<div class="container-fluid" style="max-width: 700px; margin: 0 auto;">
+    <h2 class="text-center" th:text="${marca != null} ? 'Editar Marca' : 'Nova Marca'"></h2>
+
+    <form th:action="@{/marca/salvar}" method="post" th:object="${marca}">
+        <input type="hidden" th:field="*{id}"/>
+
+        <div class="form-group">
+            <label for="nome">Nome:</label>
+            <input type="text" id="nome" th:field="*{nome}" class="form-control" required>
+            <div th:if="${#fields.hasErrors('nome')}" class="invalid-feedback d-block" th:errors="*{nome}"></div>
+        </div>
+
+        <div class="form-group">
+            <label for="pais">País:</label>
+            <input type="text" id="pais" th:field="*{pais}" class="form-control" required>
+            <div th:if="${#fields.hasErrors('pais')}" class="invalid-feedback d-block" th:errors="*{pais}"></div>
+        </div>
+
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-success">💾 Salvar</button>
+            <a href="/marca" class="btn btn-secondary">↩ Voltar</a>
+        </div>
+    </form>
 </div>
+
+<div th:replace="~{fragmentos/footer :: footer}"></div>
 </body>
 </html>
