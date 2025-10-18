@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Resultado do Cálculo de Frete</title>
+</head>
+<body>
+    <h1>Resultado do Cálculo de Frete</h1>
+    
+    <p><strong>Origem:</strong> <span th:text="${origem}"></span></p>
+    <p><strong>Destino:</strong> <span th:text="${destino}"></span></p>
+    <p><strong>Produto:</strong> <span th:text="${produto.nome}"></span></p>
+    <p><strong>Peso:</strong> <span th:text="${produto.peso}"></span> kg</p>
+    
+    <div th:if="${resultado != null}">
+        <p><strong>Distância:</strong> <span th:text="${resultado.distanciaKm}"></span> km</p>
+        <p><strong>Valor por km:</strong> R$ <span th:text="${resultado.valorPorKm}"></span></p>
+        <p><strong>Pedágio:</strong> R$ <span th:text="${resultado.pedagio}"></span></p>
+        <p><strong>Tipo de Cálculo:</strong> <span th:text="${resultado.tipoCalculo}"></span></p>
+        <p><strong>Valor Total:</strong> R$ <span th:text="${resultado.valorTotal}"></span></p>
+    </div>
+    
+    <div>
+        <a href="/solicitacao/formulario">Nova Solicitação</a> |
+        <a href="/solicitacao">Ver Todas as Solicitações</a> |
+        <a href="/home/dashboard">Voltar ao Dashboard</a>
+    </div>
+</body>
+</html>

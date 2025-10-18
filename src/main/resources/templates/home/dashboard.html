@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragmentos/head :: head('Dashboard - FrotaLux')}"></head>
+<body>
+    <header th:replace="fragmentos/header :: header('dashboard')"></header>
+    
+    <div class="container-fluid" style="max-width: 1200px; margin: 0 auto;">
+        
+        <!-- Seção de boas-vindas -->
+        <div class="welcome-section">
+            <h1 class="welcome-title">
+                <i class="fas fa-truck me-2"></i>Bem-vindo ao FrotaLux
+            </h1>
+            <p class="welcome-subtitle">
+                Sistema completo de gestão de frota e logística
+            </p>
+        </div>
+
+        <!-- Cards de estatísticas -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card bg-primary text-white h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-truck fa-2x mb-2"></i>
+                        <h4 th:text="${totalCaminhoes}">0</h4>
+                        <p class="mb-0">Caminhões</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card bg-success text-white h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-box fa-2x mb-2"></i>
+                        <h4 th:text="${totalCaixas}">0</h4>
+                        <p class="mb-0">Caixas</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card bg-info text-white h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-cube fa-2x mb-2"></i>
+                        <h4 th:text="${totalProdutos}">0</h4>
+                        <p class="mb-0">Produtos</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card bg-warning text-white h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-clipboard-list fa-2x mb-2"></i>
+                        <h4 th:text="${totalSolicitacoes}">0</h4>
+                        <p class="mb-0">Solicitações</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seções de dados recentes -->
+        <div class="row">
+            <!-- Caminhões Recentes -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-truck me-2"></i>Caminhões Recentes
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${caminhoesRecentes.empty}" class="text-center text-muted">
+                            <i class="fas fa-truck fa-3x mb-3"></i>
+                            <p>Nenhum caminhão cadastrado</p>
+                            <a th:href="@{/caminhao/formulario}" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i>Cadastrar Primeiro Caminhão
+                            </a>
+                        </div>
+                        <div th:if="${!caminhoesRecentes.empty}">
+                            <div th:each="caminhao : ${caminhoesRecentes}" class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <strong th:text="${caminhao.modelo}">Modelo</strong>
+                                    <br>
+                                    <small class="text-muted" th:text="${caminhao.placa}">Placa</small>
+                                </div>
+                                <div>
+                                    <small class="text-muted" th:text="${caminhao.ano}">Ano</small>
+                                </div>
+                            </div>
+                            <div class="text-center mt-3">
+                                <a th:href="@{/caminhao}" class="btn btn-outline-primary btn-sm">
+                                    Ver Todos os Caminhões
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Solicitações Recentes -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-warning text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-clipboard-list me-2"></i>Solicitações Recentes
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${solicitacoesRecentes.empty}" class="text-center text-muted">
+                            <i class="fas fa-clipboard-list fa-3x mb-3"></i>
+                            <p>Nenhuma solicitação cadastrada</p>
+                            <a th:href="@{/solicitacao/formulario}" class="btn btn-warning">
+                                <i class="fas fa-plus me-1"></i>Nova Solicitação
+                            </a>
+                        </div>
+                        <div th:if="${!solicitacoesRecentes.empty}">
+                            <div th:each="solicitacao : ${solicitacoesRecentes}" class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <strong th:text="${solicitacao.produto != null ? solicitacao.produto.nome : 'Produto não informado'}">Produto</strong>
+                                    <br>
+                                    <small class="text-muted" th:text="${solicitacao.origem + ' → ' + solicitacao.destino}">Rota</small>
+                                </div>
+                                <div>
+                                    <span class="badge bg-success" th:text="${solicitacao.valorFrete != null ? 'R$ ' + #numbers.formatDecimal(solicitacao.valorFrete, 1, 2) : 'Não calculado'}">R$ 0,00</span>
+                                </div>
+                            </div>
+                            <div class="text-center mt-3">
+                                <a th:href="@{/solicitacao}" class="btn btn-outline-warning btn-sm">
+                                    Ver Todas as Solicitações
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ações rápidas -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-bolt me-2"></i>Ações Rápidas
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 mb-2">
+                                <a th:href="@{/caminhao/formulario}" class="btn btn-primary w-100">
+                                    <i class="fas fa-plus me-1"></i>Novo Caminhão
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <a th:href="@{/caixa/formulario}" class="btn btn-success w-100">
+                                    <i class="fas fa-box me-1"></i>Nova Caixa
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <a th:href="@{/produto/formulario}" class="btn btn-info w-100">
+                                    <i class="fas fa-cube me-1"></i>Novo Produto
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <a th:href="@{/solicitacao/formulario}" class="btn btn-warning w-100">
+                                    <i class="fas fa-clipboard-list me-1"></i>Nova Solicitação
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragmentos/footer :: footer}"></div>
+</body>
+</html>
