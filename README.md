@@ -214,20 +214,6 @@ src/
 
 ## 🔧 Configurações Avançadas
 
-### Variáveis de Ambiente
-```properties
-# Banco de Dados
-spring.datasource.url=jdbc:mysql://localhost:3307/frota
-spring.datasource.username=root
-spring.datasource.password=alunofatec
-
-# Servidor
-server.port=8083
-
-# API Externa
-frete.api.openrouteservice.key=SUA_CHAVE
-```
-
 ### Logs
 Para habilitar logs detalhados, descomente em `application.properties`:
 ```properties
