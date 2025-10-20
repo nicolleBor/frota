@@ -36,9 +36,9 @@ public class Caixa {
 
     // 🔹 Atualiza os campos a partir do DTO de atualização
     public void atualizarInformacoes(AtualizacaoCaixa dados) {
-        if (dados.nome() != null && !dados.nome().trim().isEmpty())
+        if (dados.nome() != null)
             this.nome = dados.nome();
-        if (dados.material() != null && !dados.material().trim().isEmpty())
+        if (dados.material() != null)
             this.material = dados.material();
         if (dados.comprimento() != null && dados.comprimento() > 0)
             this.comprimento = dados.comprimento();

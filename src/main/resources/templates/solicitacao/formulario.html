@@ -4,8 +4,20 @@
 <body>
 <header th:replace="~{fragmentos/header :: header('solicitacao')}"></header>
 
-<div class="container-fluid" style="max-width: 800px; margin: 0 auto;">
+<div class="container-fluid" style="max-width: 1200px; margin: 0 auto;">
     <h2 class="text-center" th:text="${solicitacao.id != null} ? 'Editar Solicitação' : 'Nova Solicitação'"></h2>
+    
+    <!-- Exibir mensagens de erro -->
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>⚠️ Erro:</strong> <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    
+    <!-- Exibir mensagens de sucesso -->
+    <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <strong>✅ Sucesso:</strong> <span th:text="${message}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
     
     <div class="alert alert-info">
         <h5>🚛 Como funciona o cálculo de frete:</h5>
@@ -13,101 +25,328 @@
             <li><strong>Distância:</strong> Calculada automaticamente usando APIs de roteamento</li>
             <li><strong>Peso Cubado:</strong> Volume × Fator de Cubagem (300 kg/m³)</li>
             <li><strong>Peso Cobrado:</strong> Maior entre peso real e peso cubado</li>
-            <li><strong>Frete:</strong> Peso Cobrado × Valor por km × Distância + Pedágio</li>
+            <li><strong>Frete:</strong> Sistema de faixas de peso (como Mercado Livre) ou cálculo por distância</li>
+            <li><strong>Taxas:</strong> Coleta (R$ 5,00) + Entrega (R$ 8,00) + Seguro (R$ 2,00) + Pedágio</li>
         </ul>
     </div>
 
-    <form th:action="@{/solicitacao/salvar}" method="post" th:object="${solicitacao}">
+    <form id="solicitacaoForm" th:action="@{/solicitacao/salvar}" method="post" th:object="${solicitacao}">
         <input type="hidden" th:field="*{id}"/>
 
-        <div class="form-group">
-            <label for="caminhaoId">Caminhão:</label>
-            <select id="caminhaoId" th:field="*{caminhaoId}" class="form-control" required>
-                <option value="">Selecione um caminhão</option>
-                <option th:each="c : ${caminhoes}" th:value="${c.id}" th:text="${c.modelo + ' - ' + c.placa}"></option>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group mb-3">
+                    <label for="caminhaoId">Caminhão:</label>
+                    <select id="caminhaoId" th:field="*{caminhaoId}" class="form-control" required>
+                        <option value="">Selecione um caminhão</option>
+                        <option th:each="c : ${caminhoes}" th:value="${c.id}" th:text="${c.modelo + ' - ' + c.placa}"></option>
+                    </select>
+                    <div th:if="${#fields.hasErrors('caminhaoId')}" class="invalid-feedback d-block" th:errors="*{caminhaoId}"></div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="produtoId">Produto:</label>
+                    <select id="produtoId" th:field="*{produtoId}" class="form-control" required onchange="validarDimensoes()">
+                        <option value="">Selecione um produto</option>
+                        <option th:each="p : ${produtos}" th:value="${p.id}" th:text="${p.nome + ' (' + p.peso + 'kg)'}"></option>
             </select>
-            <div th:if="${#fields.hasErrors('caminhaoId')}" class="invalid-feedback d-block" th:errors="*{caminhaoId}"></div>
+                    <div th:if="${#fields.hasErrors('produtoId')}" class="invalid-feedback d-block" th:errors="*{produtoId}"></div>
         </div>
 
-        <div class="form-group">
-            <label for="produtoId">Produto:</label>
-            <select id="produtoId" th:field="*{produtoId}" class="form-control" required>
-                <option value="">Selecione um produto</option>
-                <option th:each="p : ${produtos}" th:value="${p.id}" th:text="${p.nome + ' (' + p.peso + 'kg)'}"></option>
+                <div class="form-group mb-3">
+                    <label for="caixaId">Caixa:</label>
+                    <select id="caixaId" th:field="*{caixaId}" class="form-control" required onchange="validarDimensoes()">
+                        <option value="">Selecione uma caixa</option>
+                        <option th:each="c : ${caixas}" th:value="${c.id}" th:text="${c.nome + ' (' + c.material + ')'}"></option>
             </select>
-            <div th:if="${#fields.hasErrors('produtoId')}" class="invalid-feedback d-block" th:errors="*{produtoId}"></div>
+                    <div th:if="${#fields.hasErrors('caixaId')}" class="invalid-feedback d-block" th:errors="*{caixaId}"></div>
+                    <div id="validacaoDimensoes" class="mt-2"></div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="quantidade">Quantidade:</label>
+                    <input type="number" id="quantidade" th:field="*{quantidade}" class="form-control" min="1" max="1000" required>
+                    <div th:if="${#fields.hasErrors('quantidade')}" class="invalid-feedback d-block" th:errors="*{quantidade}"></div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="form-group mb-3">
+                    <label for="origem">Origem:</label>
+                    <input type="text" id="origem" th:field="*{origem}" class="form-control" placeholder="Ex: São Paulo, SP ou -23.5505,-46.6333" required>
+                    <small class="form-text text-muted">
+                        💡 Digite o nome da cidade (ex: "São Paulo") ou coordenadas (ex: "-23.5505,-46.6333")
+                    </small>
+                    <div th:if="${#fields.hasErrors('origem')}" class="invalid-feedback d-block" th:errors="*{origem}"></div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="destino">Destino:</label>
+                    <input type="text" id="destino" th:field="*{destino}" class="form-control" placeholder="Ex: Rio de Janeiro, RJ ou -22.9068,-43.1729" required>
+                    <small class="form-text text-muted">
+                        💡 Digite o nome da cidade (ex: "Rio de Janeiro") ou coordenadas (ex: "-22.9068,-43.1729")
+                    </small>
+                    <div th:if="${#fields.hasErrors('destino')}" class="invalid-feedback d-block" th:errors="*{destino}"></div>
+                </div>
+
+                <!-- Campo de Valor do Frete -->
+                <div class="form-group mb-3">
+                    <label>Valor do Frete:</label>
+                    <div class="input-group">
+                        <span class="input-group-text">R$</span>
+                        <input type="text" id="valorFrete" class="form-control" readonly placeholder="Clique em 'Calcular Frete'">
+                        <button type="button" class="btn btn-primary" onclick="calcularFrete()">🧮 Calcular Frete</button>
+                        <button type="button" class="btn btn-info" onclick="mostrarDetalhes()">📊 Detalhes</button>
+                    </div>
         </div>
 
-        <div class="form-group">
-            <label for="caixaId">Caixa:</label>
-            <select id="caixaId" th:field="*{caixaId}" class="form-control" required>
-                <option value="">Selecione uma caixa</option>
-                <option th:each="c : ${caixas}" th:value="${c.id}" th:text="${c.nome + ' (' + c.material + ')'}"></option>
-            </select>
-            <div th:if="${#fields.hasErrors('caixaId')}" class="invalid-feedback d-block" th:errors="*{caixaId}"></div>
-        </div>
-
-        <div class="form-group">
-            <label for="quantidade">Quantidade:</label>
-            <input type="number" id="quantidade" th:field="*{quantidade}" class="form-control" min="1" max="1000" required>
-            <div th:if="${#fields.hasErrors('quantidade')}" class="invalid-feedback d-block" th:errors="*{quantidade}"></div>
-        </div>
-
-        <div class="form-group">
-            <label for="origem">Origem:</label>
-            <input type="text" id="origem" th:field="*{origem}" class="form-control" placeholder="Ex: São Paulo, SP ou -23.5505,-46.6333" required>
-            <small class="form-text text-muted">
-                💡 Digite o nome da cidade (ex: "São Paulo") ou coordenadas (ex: "-23.5505,-46.6333")
-            </small>
-            <div th:if="${#fields.hasErrors('origem')}" class="invalid-feedback d-block" th:errors="*{origem}"></div>
-        </div>
-
-        <div class="form-group">
-            <label for="destino">Destino:</label>
-            <input type="text" id="destino" th:field="*{destino}" class="form-control" placeholder="Ex: Rio de Janeiro, RJ ou -22.9068,-43.1729" required>
-            <small class="form-text text-muted">
-                💡 Digite o nome da cidade (ex: "Rio de Janeiro") ou coordenadas (ex: "-22.9068,-43.1729")
-            </small>
-            <div th:if="${#fields.hasErrors('destino')}" class="invalid-feedback d-block" th:errors="*{destino}"></div>
-        </div>
-
-        <div class="form-group">
-            <label for="observacoes">Observações:</label>
-            <textarea id="observacoes" th:field="*{observacoes}" class="form-control" rows="3" placeholder="Observações adicionais sobre o transporte"></textarea>
-            <div th:if="${#fields.hasErrors('observacoes')}" class="invalid-feedback d-block" th:errors="*{observacoes}"></div>
+                <div class="form-group mb-3">
+                    <label for="observacoes">Observações:</label>
+                    <textarea id="observacoes" th:field="*{observacoes}" class="form-control" rows="3" placeholder="Observações adicionais sobre o transporte"></textarea>
+                    <div th:if="${#fields.hasErrors('observacoes')}" class="invalid-feedback d-block" th:errors="*{observacoes}"></div>
+                </div>
+            </div>
         </div>
 
         <div class="text-center mt-4">
-            <button type="submit" class="btn btn-success">🚛 Calcular Frete</button>
-            <button type="button" class="btn btn-info" onclick="testarCalculo()">🧮 Testar Cálculo</button>
             <a href="/solicitacao" class="btn btn-secondary">↩ Voltar</a>
+            <button type="submit" class="btn btn-success">✅ Confirmar Solicitação</button>
         </div>
     </form>
 </div>
 
-    <script>
-    function testarCalculo() {
-        const origem = document.getElementById('origem').value;
-        const destino = document.getElementById('destino').value;
-        const produtoId = document.getElementById('produtoId').value;
-        const caminhaoId = document.getElementById('caminhaoId').value;
-        const caixaId = document.getElementById('caixaId').value;
-        
-        if (!origem || !destino || !produtoId) {
-            alert('Por favor, preencha origem, destino e produto para testar o cálculo.');
-            return;
-        }
-        
-        let url = `/solicitacao/calcular-frete?origem=${encodeURIComponent(origem)}&destino=${encodeURIComponent(destino)}&produtoId=${produtoId}`;
-        
-        // Adicionar caminhão e caixa se selecionados para cálculo completo
-        if (caminhaoId) url += `&caminhaoId=${caminhaoId}`;
-        if (caixaId) url += `&caixaId=${caixaId}`;
-        
-        // Forçar abertura em nova aba
-        window.open(url, '_blank', 'noopener,noreferrer');
+<!-- Modal de Detalhes -->
+<div class="modal fade" id="modalDetalhes" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">📊 Detalhes do Cálculo de Frete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="conteudoDetalhes"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Dados dos produtos e caixas (serão preenchidos pelo servidor)
+const produtos = /*[[${produtos}]]*/ [];
+const caixas = /*[[${caixas}]]*/ [];
+const caminhoes = /*[[${caminhoes}]]*/ [];
+const solicitacaoExistente = /*[[${solicitacaoExistente}]]*/ null;
+
+let resultadoCalculo = null;
+
+// Pré-calcular frete se estiver editando uma solicitação existente
+document.addEventListener('DOMContentLoaded', function() {
+    if (solicitacaoExistente && solicitacaoExistente.id) {
+        // Aguardar um pouco para garantir que os campos estejam preenchidos
+        setTimeout(() => {
+            calcularFrete();
+        }, 500);
     }
-    </script>
+});
+
+function validarDimensoes() {
+    const produtoId = document.getElementById('produtoId').value;
+    const caixaId = document.getElementById('caixaId').value;
+    const validacaoDiv = document.getElementById('validacaoDimensoes');
+    
+    if (!produtoId || !caixaId) {
+        validacaoDiv.innerHTML = '';
+        return;
+    }
+    
+    const produto = produtos.find(p => p.id == produtoId);
+    const caixa = caixas.find(c => c.id == caixaId);
+    
+    if (!produto || !caixa) {
+        validacaoDiv.innerHTML = '';
+        return;
+    }
+    
+    // Verificar se o produto cabe na caixa
+    const comprimentoOk = produto.comprimento <= caixa.comprimento;
+    const larguraOk = produto.largura <= caixa.largura;
+    const alturaOk = produto.altura <= caixa.altura;
+    
+    if (comprimentoOk && larguraOk && alturaOk) {
+        validacaoDiv.innerHTML = '<div class="alert alert-success"><small>✅ Produto cabe na caixa selecionada</small></div>';
+    } else {
+        let mensagem = '❌ Produto não cabe na caixa:<br>';
+        if (!comprimentoOk) mensagem += `- Comprimento: ${produto.comprimento}m > ${caixa.comprimento}m<br>`;
+        if (!larguraOk) mensagem += `- Largura: ${produto.largura}m > ${caixa.largura}m<br>`;
+        if (!alturaOk) mensagem += `- Altura: ${produto.altura}m > ${caixa.altura}m<br>`;
+        mensagem += '<small>Selecione uma caixa maior ou produto menor.</small>';
+        
+        validacaoDiv.innerHTML = `<div class="alert alert-danger"><small>${mensagem}</small></div>`;
+    }
+}
+
+function calcularFrete() {
+    const origem = document.getElementById('origem').value;
+    const destino = document.getElementById('destino').value;
+    const produtoId = document.getElementById('produtoId').value;
+    const caminhaoId = document.getElementById('caminhaoId').value;
+    const caixaId = document.getElementById('caixaId').value;
+    
+    if (!origem || !destino || !produtoId) {
+        alert('Por favor, preencha origem, destino e produto para calcular o frete.');
+        return;
+    }
+    
+    let url = `/solicitacao/calcular-frete?origem=${encodeURIComponent(origem)}&destino=${encodeURIComponent(destino)}&produtoId=${produtoId}`;
+    
+    if (caminhaoId) url += `&caminhaoId=${caminhaoId}`;
+    if (caixaId) url += `&caixaId=${caixaId}`;
+    
+    fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erro na requisição');
+            }
+            return response.text();
+        })
+        .then(html => {
+            // Se retornou HTML, significa que houve erro e foi redirecionado para o formulário
+            if (html.includes('<!DOCTYPE html>')) {
+                throw new Error('Erro ao calcular frete');
+            }
+            // Se não é HTML, tentar parsear como JSON
+            try {
+                const data = JSON.parse(html);
+                resultadoCalculo = data;
+                document.getElementById('valorFrete').value = `R$ ${data.valorTotal.toFixed(2)}`;
+            } catch (e) {
+                throw new Error('Resposta inválida do servidor');
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao calcular frete:', error);
+            alert('Erro ao calcular o frete. Tente novamente.');
+        });
+}
+
+function mostrarDetalhes() {
+    if (!resultadoCalculo) {
+        alert('Calcule o frete primeiro para ver os detalhes.');
+        return;
+    }
+    
+    const produtoId = document.getElementById('produtoId').value;
+    const produto = produtos.find(p => p.id == produtoId);
+    
+    let conteudo = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6>📍 Informações da Rota</h6>
+                <p><strong>Origem:</strong> ${resultadoCalculo.origem}</p>
+                <p><strong>Destino:</strong> ${resultadoCalculo.destino}</p>
+                <p><strong>Distância:</strong> ${resultadoCalculo.distanciaKm.toFixed(1)} km</p>
+            </div>
+            <div class="col-md-6">
+                <h6>📦 Informações do Produto</h6>
+                <p><strong>Nome:</strong> ${resultadoCalculo.produto?.nome || '-'}</p>
+                <p><strong>Peso:</strong> ${resultadoCalculo.produto?.peso || '-'} kg</p>
+    `;
+    
+    if (produto) {
+        const volume = produto.comprimento * produto.largura * produto.altura;
+        const pesoCubado = volume * 300;
+        const pesoCobrado = Math.max(produto.peso, pesoCubado);
+        
+        conteudo += `
+                <p><strong>Dimensões:</strong> ${produto.comprimento}m × ${produto.largura}m × ${produto.altura}m</p>
+                <p><strong>Volume:</strong> ${volume.toFixed(3)} m³</p>
+                <p><strong>Peso Cubado:</strong> ${pesoCubado.toFixed(2)} kg</p>
+                <p><strong>Peso Cobrado:</strong> ${pesoCobrado.toFixed(2)} kg</p>
+        `;
+    }
+    
+    conteudo += `
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-12">
+                <h6>💰 Detalhamento do Frete</h6>
+                
+                <!-- Método 1: Baseado em Faixas de Peso -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">⚖️ Método 1: Sistema de Faixas de Peso</h6>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Fórmula:</strong> Valor Base × Multiplicador Tipo × Multiplicador Distância</p>
+                        <p><strong>Peso Cobrado:</strong> ${resultadoCalculo.pesoCobrado?.toFixed(1) || '0.0'} kg</p>
+                        <p><strong>Faixa de Peso:</strong> ${resultadoCalculo.pesoCobrado <= 1 ? '0-1kg (R$ 12,00)' : resultadoCalculo.pesoCobrado <= 5 ? '1-5kg (R$ 18,00)' : resultadoCalculo.pesoCobrado <= 10 ? '5-10kg (R$ 25,00)' : resultadoCalculo.pesoCobrado <= 30 ? '10-30kg (R$ 35,00)' : '30kg+ (R$ 45,00)'}</p>
+                        <p><strong>Multiplicador Tipo:</strong> ${resultadoCalculo.tipoCalculo === 'volume' ? '1.1 (Volumoso)' : resultadoCalculo.tipoCalculo === 'caixa' ? '1.05 (Caixa)' : '1.0 (Padrão)'}</p>
+                        <p><strong>Multiplicador Distância:</strong> ${resultadoCalculo.distanciaKm <= 50 ? '1.0 (0-50km)' : resultadoCalculo.distanciaKm <= 200 ? '1.1 (51-200km)' : resultadoCalculo.distanciaKm <= 500 ? '1.2 (201-500km)' : resultadoCalculo.distanciaKm <= 1000 ? '1.3 (501-1000km)' : '1.4 (1000km+)'}</p>
+                        <p><strong>Resultado:</strong> R$ ${resultadoCalculo.valorFretePeso?.toFixed(2) || '0.00'}</p>
+                    </div>
+                </div>
+                
+                <!-- Método 2: Baseado em Quilometragem -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">🛣️ Método 2: Baseado em Quilometragem</h6>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Fórmula:</strong> Valor por km × Distância × Multiplicador Distância</p>
+                        <p><strong>Valor por km:</strong> R$ ${resultadoCalculo.tipoCalculo === 'volume' ? '0.10' : resultadoCalculo.tipoCalculo === 'caixa' ? '0.09' : '0.08'}</p>
+                        <p><strong>Distância:</strong> ${resultadoCalculo.distanciaKm?.toFixed(1) || '0.0'} km</p>
+                        <p><strong>Multiplicador Distância:</strong> ${resultadoCalculo.distanciaKm <= 50 ? '1.0 (0-50km)' : resultadoCalculo.distanciaKm <= 200 ? '1.1 (51-200km)' : resultadoCalculo.distanciaKm <= 500 ? '1.2 (201-500km)' : resultadoCalculo.distanciaKm <= 1000 ? '1.3 (501-1000km)' : '1.4 (1000km+)'}</p>
+                        <p><strong>Resultado:</strong> R$ ${resultadoCalculo.valorFreteDistancia?.toFixed(2) || '0.00'}</p>
+                    </div>
+                </div>
+                
+                <!-- Comparação e Resultado Final -->
+                <div class="alert alert-info">
+                    <h6>🔍 Comparação dos Métodos</h6>
+                    <p><strong>Método usado:</strong> ${resultadoCalculo.metodoUsado === 'faixas_peso' ? '⚖️ Sistema de Faixas de Peso' : '🛣️ Baseado em Quilometragem'}</p>
+                    <p><strong>Motivo:</strong> ${resultadoCalculo.metodoUsado === 'faixas_peso' ? 'Valor baseado em faixas de peso foi maior' : 'Valor baseado em quilometragem foi maior'}</p>
+                </div>
+                
+                <!-- Detalhamento das Taxas -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">📋 Detalhamento das Taxas</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Valor Base:</strong> R$ ${resultadoCalculo.valorBase?.toFixed(2) || '0.00'}</p>
+                                <p><strong>Taxa de Coleta:</strong> R$ ${resultadoCalculo.taxaColeta?.toFixed(2) || '0.00'}</p>
+                                <p><strong>Taxa de Entrega:</strong> R$ ${resultadoCalculo.taxaEntrega?.toFixed(2) || '0.00'}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Taxa de Seguro:</strong> R$ ${resultadoCalculo.taxaSeguro?.toFixed(2) || '0.00'}</p>
+                                <p><strong>Pedágio:</strong> R$ ${resultadoCalculo.pedagio?.toFixed(2) || '0.00'}</p>
+                                <hr>
+                                <p><strong>Valor Total:</strong> R$ ${resultadoCalculo.valorTotalComTaxas?.toFixed(2) || resultadoCalculo.valorTotal?.toFixed(2) || '0.00'}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-success">
+                    <h5 class="mb-0">✅ Valor Final: R$ ${resultadoCalculo.valorTotalComTaxas?.toFixed(2) || resultadoCalculo.valorTotal?.toFixed(2) || '0.00'}</h5>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('conteudoDetalhes').innerHTML = conteudo;
+    
+    const modal = new bootstrap.Modal(document.getElementById('modalDetalhes'));
+    modal.show();
+}
+</script>
 
 <div th:replace="~{fragmentos/footer :: footer}"></div>
 </body>

@@ -15,6 +15,7 @@ import com.example.frota.caminhao.CaminhaoService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import jakarta.transaction.Transactional;
+import java.util.HashMap;
 import java.util.Map;
 
 @Controller
@@ -38,6 +39,9 @@ public class SolicitacaoController {
 
     @Autowired
     private FreteService freteService;
+    
+    @Autowired
+    private ValidacaoService validacaoService;
 
     @GetMapping
     public String listaSolicitacoes(Model model) {
@@ -52,6 +56,9 @@ public class SolicitacaoController {
             SolicitacaoTransporte solicitacao = solicitacaoService.procurarPorId(id)
                     .orElseThrow(() -> new EntityNotFoundException("Solicitação não encontrada"));
             dto = solicitacaoMapper.toAtualizacaoDto(solicitacao);
+            
+            // Adicionar dados da solicitação existente para pré-calcular o frete
+            model.addAttribute("solicitacaoExistente", solicitacao);
         } else {
             dto = new AtualizacaoSolicitacao(null, null, null, null, 1, "", "", "", "PENDENTE");
         }
@@ -83,6 +90,10 @@ public class SolicitacaoController {
         } catch (EntityNotFoundException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/solicitacao/formulario" + (dto.id() != null ? "?id=" + dto.id() : "");
+        } catch (IllegalArgumentException e) {
+            // Tratar erro de validação de caixa/produto de forma elegante
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/solicitacao/formulario" + (dto.id() != null ? "?id=" + dto.id() : "");
         }
     }
 
@@ -99,12 +110,12 @@ public class SolicitacaoController {
     }
 
     @GetMapping("/calcular-frete")
-    public String calcularFrete(@RequestParam String origem, 
-                              @RequestParam String destino,
-                              @RequestParam Long produtoId,
-                              @RequestParam(required = false) Long caminhaoId,
-                              @RequestParam(required = false) Long caixaId,
-                              Model model) {
+    @ResponseBody
+    public Map<String, Object> calcularFrete(@RequestParam String origem, 
+                                            @RequestParam String destino,
+                                            @RequestParam Long produtoId,
+                                            @RequestParam(required = false) Long caminhaoId,
+                                            @RequestParam(required = false) Long caixaId) {
         try {
             var produto = produtoService.procurarPorId(produtoId)
                     .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
@@ -112,58 +123,54 @@ public class SolicitacaoController {
             // Determinar tipo de cálculo baseado no produto (mesma lógica do service)
             String tipoCalculo = determinarTipoCalculo(produto);
             
-            // Calcular frete usando o serviço externo
-            var resultadoFrete = freteService.calcularFrete(origem, destino, produto.getPeso(), tipoCalculo);
+            // Calcular peso cobrado usando o ValidacaoService
+            double pesoCobrado = validacaoService.determinarPesoCobrado(produto);
             
-            // Se temos caminhão e caixa, calcular peso cubado também
-            if (caminhaoId != null && caixaId != null) {
-                var caminhao = caminhaoService.procurarPorId(caminhaoId)
-                        .orElseThrow(() -> new EntityNotFoundException("Caminhão não encontrado"));
-                caixaService.procurarPorId(caixaId)
+            // Calcular volume do produto
+            double volumeProduto = validacaoService.calcularVolumeProduto(produto);
+            
+            // Calcular frete usando o serviço externo com peso real e volume
+            var resultadoFrete = freteService.calcularFrete(origem, destino, produto.getPeso(), volumeProduto, tipoCalculo);
+            
+            // Adicionar informações detalhadas de cubagem
+            double pesoCubado = validacaoService.calcularPesoCubado(produto);
+            double pesoReal = produto.getPeso();
+            
+            // Adicionar informações de cubagem ao resultado
+            resultadoFrete.put("pesoCubado", pesoCubado);
+            resultadoFrete.put("pesoReal", pesoReal);
+            resultadoFrete.put("pesoCobrado", pesoCobrado);
+            resultadoFrete.put("pesoCubadoMaior", pesoCubado > pesoReal);
+            resultadoFrete.put("volumeProduto", volumeProduto);
+            resultadoFrete.put("produto", produto);
+            resultadoFrete.put("origem", origem);
+            resultadoFrete.put("destino", destino);
+            
+            // Se temos caixa, validar dimensões
+            if (caixaId != null) {
+                var caixa = caixaService.procurarPorId(caixaId)
                         .orElseThrow(() -> new EntityNotFoundException("Caixa não encontrada"));
                 
-                // Calcular peso cubado
-                double volumeProduto = produto.getVolume();
-                double pesoCubado = caminhao.calcularPesoCubado(volumeProduto);
-                double pesoReal = produto.getPeso();
-                double pesoCobrado = Math.max(pesoCubado, pesoReal);
+                boolean produtoCabe = validacaoService.produtoCabeNaCaixa(produto, caixa);
+                resultadoFrete.put("produtoCabeNaCaixa", produtoCabe);
                 
-                // Recalcular valor total considerando peso cubado
-                double distanciaKm = (Double) resultadoFrete.get("distanciaKm");
-                double valorPorKm = (Double) resultadoFrete.get("valorPorKm");
-                double valorPedagio = (Double) resultadoFrete.get("pedagio");
-                double valorTotalComCubagem = pesoCobrado * valorPorKm * distanciaKm + valorPedagio;
-                
-                // Adicionar informações de cubagem ao resultado
-                resultadoFrete.put("pesoCubado", pesoCubado);
-                resultadoFrete.put("pesoReal", pesoReal);
-                resultadoFrete.put("pesoCobrado", pesoCobrado);
-                resultadoFrete.put("pesoCubadoMaior", pesoCubado > pesoReal);
-                resultadoFrete.put("valorTotalComCubagem", valorTotalComCubagem);
-                resultadoFrete.put("volumeProduto", volumeProduto);
+                if (!produtoCabe) {
+                    resultadoFrete.put("mensagemValidacao", validacaoService.getMensagemValidacao(produto, caixa));
+                }
             }
             
-            model.addAttribute("resultado", resultadoFrete);
-            model.addAttribute("produto", produto);
-            model.addAttribute("origem", origem);
-            model.addAttribute("destino", destino);
-            
-            return "solicitacao/resultado-frete";
+            return resultadoFrete;
         } catch (Exception e) {
-            model.addAttribute("error", "Erro ao calcular frete: " + e.getMessage());
-            // Adicionar os dados necessários para o formulário
-            model.addAttribute("solicitacao", new AtualizacaoSolicitacao(null, null, null, null, 1, origem, destino, "", "PENDENTE"));
-            model.addAttribute("produtos", produtoService.procurarTodos());
-            model.addAttribute("caixas", caixaService.procurarTodos());
-            model.addAttribute("caminhoes", caminhaoService.procurarTodos());
-            return "solicitacao/formulario";
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "Erro ao calcular frete: " + e.getMessage());
+            return error;
         }
     }
     
     
     private String determinarTipoCalculo(com.example.frota.produto.Produto produto) {
         double peso = produto.getPeso();
-        double volume = produto.getVolume();
+        double volume = produto.getComprimento() * produto.getLargura() * produto.getAltura();
         
         // Lógica para determinar o tipo de cálculo (mesma do service)
         if (peso > 100) {

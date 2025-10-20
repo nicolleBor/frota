@@ -38,6 +38,9 @@ public class SolicitacaoService {
     @Autowired
     private FreteService freteService;
 
+    @Autowired
+    private ValidacaoService validacaoService;
+
     @Transactional
     public SolicitacaoTransporte salvarOuAtualizar(AtualizacaoSolicitacao dto) {
         Produto produto = null;
@@ -101,26 +104,45 @@ public class SolicitacaoService {
             // Determinar tipo de cálculo baseado no produto
             String tipoCalculo = determinarTipoCalculo(solicitacao);
             
-            // Calcular frete usando o serviço externo
+            // Calcular peso cobrado usando a lógica de cubagem
+            double pesoCobrado = validacaoService.determinarPesoCobrado(solicitacao.getProduto());
+            
+            // Calcular volume do produto
+            double volumeProduto = validacaoService.calcularVolumeProduto(solicitacao.getProduto());
+            
+            // Calcular frete usando o serviço externo com peso real e volume
             var resultadoFrete = freteService.calcularFrete(
                 solicitacao.getOrigem(),
                 solicitacao.getDestino(),
                 solicitacao.getProduto().getPeso(),
+                volumeProduto,
                 tipoCalculo
             );
 
             // Aplicar os resultados na solicitação
             double distanciaKm = (Double) resultadoFrete.get("distanciaKm");
-            double valorPorKm = (Double) resultadoFrete.get("valorPorKm");
             double valorPedagio = (Double) resultadoFrete.get("pedagio");
+            double valorTotal = (Double) resultadoFrete.get("valorTotal");
 
-            solicitacao.calcularFrete(valorPorKm, distanciaKm);
+            // Usar o valor total calculado pelo FreteService (que já considera cubagem)
+            solicitacao.setDistanciaKm(distanciaKm);
+            solicitacao.setValorKm(0.0); // Não usado no novo sistema
             solicitacao.setValorPedagio(valorPedagio);
+            solicitacao.setValorFrete(valorTotal);
+            
+            // Definir informações de cubagem
+            double pesoReal = solicitacao.getProduto().getPeso();
+            double pesoCubado = validacaoService.calcularPesoCubado(solicitacao.getProduto());
+            solicitacao.setPesoCobrado(pesoCobrado);
+            solicitacao.setPesoCubado(pesoCubado);
+            solicitacao.setPesoCubadoMaior(pesoCubado > pesoReal);
 
         } catch (Exception e) {
-            // Fallback: usar valores padrão
-            solicitacao.calcularFrete(1.50, 100.0); // R$ 1,50/km, 100km
-            solicitacao.setValorPedagio(25.0); // R$ 25,00 pedágio
+            // Fallback: usar valores padrão mais realistas
+            solicitacao.setDistanciaKm(100.0);
+            solicitacao.setValorKm(0.0); // Não usado no novo sistema
+            solicitacao.setValorPedagio(25.0);
+            solicitacao.setValorFrete(50.0); // Valor mais realista para fallback
         }
     }
 
